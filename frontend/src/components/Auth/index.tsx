@@ -50,7 +50,7 @@ const Auth: React.FC<IAuthProps> = ({session,reloadSession}) => {
             <>
             <Text fontSize="3xl">Create a Username</Text>
             <Input placeholder="Enter a username" value={username} onChange={(e)=>setUsername(e.target.value)}/>
-            <Button width="100%"  onClick={onSubmit}>Save</Button>
+            <Button width="100%"  onClick={onSubmit} isLoading={loading}>Save</Button>
             </>
           ) :(
             <>
