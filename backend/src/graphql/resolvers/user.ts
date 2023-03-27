@@ -1,8 +1,38 @@
+import { User } from "@prisma/client";
 import { CreateUsernameResponse, GraphQlContext } from "../../util/types"
+import { ApolloError } from 'apollo-server-errors'
 
 const resolvers = {
     Query:{
-        searchUsers:()=>{}
+        searchUsers:async(_:any , args:{ username:string}, context:GraphQlContext ):Promise<Array<User>>=>{
+            const { username : searchedUser } = args;
+            const { session , prisma } = context;
+
+            if(!session?.user){
+               throw new ApolloError("Not authorized")
+            }
+
+            const { user:{username : myUsername} } = session
+
+            try {
+
+                const users = await prisma.user.findMany({
+                    where:{
+                        username:{
+                            contains:searchedUser,
+                            not:myUsername,
+                            mode:'insensitive'
+                        }
+                    }
+                })
+
+                return users
+                
+            } catch (error:any) {
+                console.log("searchedUsers error" , error)
+                throw new ApolloError(error?.message)
+            }
+        }
     },
     
     Mutation:{

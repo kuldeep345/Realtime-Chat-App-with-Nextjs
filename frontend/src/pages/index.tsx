@@ -1,8 +1,9 @@
 import Auth from "@/components/Auth"
 import Chat from "@/components/Chat"
-import { Box } from "@chakra-ui/react"
+import { Box, ChakraProvider } from "@chakra-ui/react"
 import type { NextPage, NextPageContext } from "next"
 import { getSession, useSession } from 'next-auth/react'
+import { theme } from '../chakra/theme'
 
 const Home:NextPage = ()=>{
 
@@ -15,9 +16,11 @@ const Home:NextPage = ()=>{
   };
 
   return (
+    
    <Box>
     {session?.user.username ? <Chat session={session}/> : <Auth session={session} reloadSession={reloadSession} />}
    </Box>
+ 
   )
 }
 

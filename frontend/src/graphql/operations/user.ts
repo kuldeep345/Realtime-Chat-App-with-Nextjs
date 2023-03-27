@@ -15,7 +15,7 @@ export default {
         createUsername:gql`
             mutation CreateUsername($username:String!){
                 createUsername(username:$username){
-                    success,
+                    success
                     error
                 }
             }
