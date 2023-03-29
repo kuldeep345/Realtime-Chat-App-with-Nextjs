@@ -12,7 +12,11 @@ import { makeExecutableSchema } from '@graphql-tools/schema'
 import * as dotenv from 'dotenv'
 import { getSession } from 'next-auth/react'
 import { PrismaClient } from '@prisma/client'
-import { GraphQlContext, Session } from './util/types';
+import { GraphQlContext, Session, SubscriptionContext } from './util/types';
+import { WebSocketServer } from 'ws';
+import { useServer } from 'graphql-ws/lib/use/ws';
+import { PubSub } from 'graphql-subscriptions';
+
 
 interface MyContext {
     token?: String;
@@ -22,21 +26,48 @@ async function main() {
     dotenv.config()
     const app = express();
     const httpServer = http.createServer(app);
+    const prisma = new PrismaClient()
+    const pubsub = new PubSub();
     const schema = makeExecutableSchema({
         typeDefs,
         resolvers
     })
 
+    const wsServer = new WebSocketServer({
+        server: httpServer,
+        path: '/graphql/subscriptions',
+    });
+
+    const serverCleanup = useServer({ schema , context:(ctx:SubscriptionContext)=>{
+        if(ctx.connectionParams && ctx.connectionParams.session) {
+            const { session } = ctx.connectionParams
+            return { session , prisma , pubsub };
+        }
+        return {  session:null , prisma, pubsub };
+    } }, wsServer); 
+
     const corsOptions = {
-        origin:process.env.CLIENT_ORIGIN,
-        credentials:true
+        origin: process.env.CLIENT_ORIGIN,
+        credentials: true
     }
 
-    const prisma = new PrismaClient()
+   
 
     const server = new ApolloServer<MyContext>({
         schema,
-        plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+        plugins: [
+            ApolloServerPluginDrainHttpServer({ httpServer }),
+
+            {
+                async serverWillStart() {
+                    return {
+                        async drainServer() {
+                            await serverCleanup.dispose();
+                        },
+                    };
+                },
+            },
+        ],
     });
     await server.start();
     app.use(
@@ -44,9 +75,9 @@ async function main() {
         cors<cors.CorsRequest>(corsOptions),
         json(),
         expressMiddleware(server, {
-            context: async ({ req , res }):Promise<GraphQlContext> => {
-                const session = await getSession({req}) as Session
-                return {session , prisma};
+            context: async ({ req, res }): Promise<GraphQlContext> => {
+                const session = await getSession({ req }) as Session
+                return { session, prisma , pubsub};
             },
         }),
     );

@@ -1,18 +1,22 @@
+import { ConversationData , ConversationPopulated} from '@/util/types';
 import { Box, ChakraProvider, Text } from '@chakra-ui/react';
 import { Session } from 'next-auth';
 import { useState } from 'react';
+import ConversationItem from './ConversationItem';
 import ConversationModal from './Modal/Modal'
 
 interface IConversationListProps {
-  session:Session
+  session:Session;
+  conversations:ConversationPopulated[]
 }
 
-const ConversationList: React.FC<IConversationListProps> = ({session}) => {
+const ConversationList: React.FC<IConversationListProps> = ({session, conversations}) => {
 
   const [ isOpen , setIsOpen] = useState(false)
 
   const onOpen = ()=>setIsOpen(true);
   const onClose = ()=>setIsOpen(false)
+  console.log(conversations)
 
   return (
     <Box width='100%'>
@@ -22,6 +26,9 @@ const ConversationList: React.FC<IConversationListProps> = ({session}) => {
       <ChakraProvider>
       <ConversationModal isOpen={isOpen} onClose={onClose} session={session}/>
       </ChakraProvider>
+      {conversations.map((conversation)=>(
+        <ConversationItem key={conversation.id} conversation={conversation}/>
+      ))}
     </Box>
   ) ;
 };

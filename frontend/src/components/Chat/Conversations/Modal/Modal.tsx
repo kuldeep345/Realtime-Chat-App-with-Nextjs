@@ -9,6 +9,7 @@ import  { theme } from '@/chakra/theme'
 import Participants from './Participants';
 import { toast } from 'react-hot-toast';
 import { Session } from 'next-auth';
+import { useRouter } from 'next/router';
 
 interface IModalProps {
     isOpen:boolean;
@@ -17,6 +18,7 @@ interface IModalProps {
 }
 
 const ConversationModal: React.FunctionComponent<IModalProps> = ({isOpen ,onClose,  session}) => {
+  const router = useRouter()
     const { user:{id:userId} } = session
     const [ username , setUsername] = useState('')
     const [participants ,setParticipants] = useState<Array<SearchedUser>>([])
@@ -32,7 +34,18 @@ const ConversationModal: React.FunctionComponent<IModalProps> = ({isOpen ,onClos
           variables:{participantIds}
         })
 
-        console.log('HERE IS DATA' , data)
+        if(!data?.createConversation){
+           throw new Error("Failed to create conversation")
+        }
+
+        const { createConversation:{ conversationId }} = data
+
+        router.push({query:{conversationId}})
+
+        //clear state and close model
+        setParticipants([])
+        setUsername("");
+        onClose();
 
       } catch (error:any) {
         console.log('onCreateConverstion error' , error)

@@ -27,7 +27,28 @@ export interface SearchedUser {
 
 /**
  * Conversations
+ * 
  */
+export type ParticipantPopulated={
+  user:{
+    id:string;
+    username:string;
+  };
+}
+
+export interface ConversationPopulated{
+  id:string;
+  latestMessage:null | string;
+  partcipants:{
+    hasSeenlatestNessage:boolean
+    users:any
+  }[];
+  updatedAt:string
+}
+
+export interface ConversationData {
+  conversations:Array<ConversationPopulated>
+}
 
 export interface CreateConversationData {
   createConversation:{
