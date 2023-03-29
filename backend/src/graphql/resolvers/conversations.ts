@@ -1,6 +1,7 @@
 import { ConversationPopulated, GraphQlContext } from '../../util/types';
 import { ApolloError } from 'apollo-server-errors'
 import { Prisma } from '@prisma/client';
+import { withFilter } from 'graphql-subscriptions';
 
 const resolvers = {
 
@@ -70,13 +71,24 @@ const resolvers = {
     },
     Subscription:{
         conversationCreated:{
-            subscribe:(_:any, __:any, context:GraphQlContext)=>{
+            
+            subscribe:withFilter((_:any, __:any, context:GraphQlContext)=>{
                 const { pubsub } = context;
               return pubsub.asyncIterator(['CONVERSATION_CREATED'])
-            },
+            } ,
+             (payload , _ , context:GraphQlContext)=>{
+                const { session } = context;
+                const { conversationCreated:{participants} } = payload;
+
+                const userIsParticipant = !!participants.find((p:any) => p.userId === session?.user.id)
+
+                return userIsParticipant
+             })
         },
     },
 };
+
+
 
 export const participantPopulated = Prisma.validator<Prisma.ConversationParticipantInclude>()({
     user:{

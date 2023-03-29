@@ -3,7 +3,7 @@ import { gql } from "@apollo/client";
 const ConversationFields = `
         id
         participants {
-            users {
+            user {
                 id
                 username
             }

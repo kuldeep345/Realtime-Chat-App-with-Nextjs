@@ -22,7 +22,7 @@ const typeDefs = gql`
 
     type Participant {
         id:String
-        users:User
+        user:User
         hasSeenLatestMessage:Boolean
     }
 
